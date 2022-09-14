@@ -24,8 +24,6 @@ package org.appenders.log4j2.elasticsearch;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.appender.rolling.PatternProcessor;
 import org.apache.logging.log4j.core.config.ConfigurationException;
-import org.apache.logging.log4j.core.config.Node;
-import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
 import org.apache.logging.log4j.core.config.plugins.validation.constraints.Required;
@@ -35,11 +33,14 @@ import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Thread-safe, time-based rolling index name formatter. Caches formatted index name between rolls to minimize overhead.
+ * Time-based rolling index name formatter. Caches formatted index name between rolls to minimize overhead.
  * <p>
  * Format: {@code <indexName>-<datePattern>}
+ * <p>
+ * This class is NOT thread-safe!
+ * @deprecated As of 2.0, this class will be removed. Use {@link RollingIndexNamePlugin} or {@link RollingMillisFormatter} instead.
  */
-@Plugin(name = "RollingIndexName", category = Node.CATEGORY, elementType = IndexNameFormatter.ELEMENT_TYPE, printObject = true)
+@Deprecated
 public class RollingIndexNameFormatter implements IndexNameFormatter<LogEvent> {
 
     public static final String DEFAULT_SEPARATOR = "-";
@@ -92,8 +93,7 @@ public class RollingIndexNameFormatter implements IndexNameFormatter<LogEvent> {
     }
 
     @Override
-    public final String format(LogEvent event) {
-        long eventTimeInMillis = event.getTimeMillis();
+    public final String format(final long eventTimeInMillis) {
 
         // handle "old" events that arrived in separate threads after rollover
         if (eventTimeInMillis < currentFileTime) {
@@ -101,9 +101,13 @@ public class RollingIndexNameFormatter implements IndexNameFormatter<LogEvent> {
         }
 
         // rollover
-        if (eventTimeInMillis >= nextRolloverTime && rollingOver.compareAndSet(false, true)) {
-            rollover(indexName, eventTimeInMillis);
-            rollingOver.set(false);
+        while (eventTimeInMillis >= nextRolloverTime) {
+            if (rollingOver.compareAndSet(false, true)) {
+                rollover(indexName, eventTimeInMillis);
+                rollingOver.set(false);
+                continue;
+            }
+            break;
         }
 
         // happy path - have to check for pending rollover to avoid race conditions
@@ -113,6 +117,12 @@ public class RollingIndexNameFormatter implements IndexNameFormatter<LogEvent> {
 
         // fail-safe for pending rollover
         return doFormat(indexName, eventTimeInMillis);
+
+    }
+
+    @Override
+    public final String format(final LogEvent obj) {
+        return format(obj.getTimeMillis());
     }
 
     private void rollover(String indexName, long eventTimeInMillis) {

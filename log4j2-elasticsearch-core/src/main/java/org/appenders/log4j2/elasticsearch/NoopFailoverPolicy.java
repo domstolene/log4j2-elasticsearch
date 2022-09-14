@@ -21,14 +21,9 @@ package org.appenders.log4j2.elasticsearch;
  */
 
 
-import org.apache.logging.log4j.core.config.Node;
-import org.apache.logging.log4j.core.config.plugins.Plugin;
-import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
-
 /**
  * Default, no-op failure handler. Doesn't perform any action on failed item.
  */
-@Plugin(name = "NoopFailoverPolicy", category = Node.CATEGORY, elementType = FailoverPolicy.ELEMENT_TYPE, printObject = true)
 public class NoopFailoverPolicy implements FailoverPolicy<Object> {
 
     @Override
@@ -36,14 +31,8 @@ public class NoopFailoverPolicy implements FailoverPolicy<Object> {
         // noop
     }
 
-    @PluginBuilderFactory
-    public static Builder newBuilder() {
-        return new Builder();
-    }
+    public static class Builder {
 
-    public static class Builder implements org.apache.logging.log4j.core.util.Builder<NoopFailoverPolicy> {
-
-        @Override
         public NoopFailoverPolicy build() {
             return new NoopFailoverPolicy();
         }

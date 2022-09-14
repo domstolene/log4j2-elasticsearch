@@ -99,7 +99,6 @@ public class RollingIndexNameFormatterTest {
 
     }
 
-
     @Test
     public void builderThrowsWhenPatternIsNull() {
 
@@ -131,7 +130,6 @@ public class RollingIndexNameFormatterTest {
         assertEquals("testIndexName-2017-12-20-23.54", formattedIndexName);
     }
 
-
     @Test
     public void returnsNextRolloverTimeIfEventTimeIsAfterRolloverTime() {
 
@@ -146,6 +144,25 @@ public class RollingIndexNameFormatterTest {
 
         // then
         assertEquals("testIndexName-2017-12-21-00.54", formattedIndexName);
+    }
+
+    @Test
+    public void returnsNextRolloverTimeAlignedWithEventTimeIfEventTimeIsAfterNextFewRolloverTimes() {
+
+        // given
+        LogEvent logEvent = mock(LogEvent.class);
+        when(logEvent.getTimeMillis()).thenReturn(getTestTimeInMillis() + TimeUnit.HOURS.toMillis(3));
+
+        RollingIndexNameFormatter formatter = createRollingIndexNameFormatterBuilder().build();
+
+        assertEquals(getTestTimeInMillis(), formatter.getNextRolloverTime());
+
+        // when
+        String formattedIndexName = formatter.format(logEvent);
+
+        // then
+        assertEquals("testIndexName-2017-12-21-02.54", formattedIndexName);
+
     }
 
     @Test
@@ -244,15 +261,11 @@ public class RollingIndexNameFormatterTest {
     @Test
     public void concurrencyTest() throws InterruptedException {
 
-        // given
-//        TestFormatter.TEST_PATTERN_PROCESSOR = Mockito.spy(new PatternProcessor("%d{" + DATE_PATTERN_WITH_MINUTES + "}"));
-
         for (int ii = 0; ii < 100; ii++) {
             IndexNameFormatter formatter = createRollingIndexNameFormatterBuilder().build();
             runSingleConcurrencyTest(formatter, 20);
         }
 
-//        Mockito.verify(TestFormatter.TEST_PATTERN_PROCESSOR, Mockito.times(100)).getNextTime(Mockito.any(long.class), Mockito.eq(1), Mockito.eq(false));
     }
 
     private void runSingleConcurrencyTest(IndexNameFormatter formatter, int numberOfThreads) throws InterruptedException {

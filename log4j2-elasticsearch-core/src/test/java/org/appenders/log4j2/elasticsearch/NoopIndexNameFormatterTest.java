@@ -30,21 +30,40 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 public class NoopIndexNameFormatterTest {
 
     public static final String TEST_INDEX_NAME = "testIndexName";
 
     @Test
-    public void returnsIndexNameUnchanged() {
+    public void returnsIndexNameUnchangedOnLogEvent() {
 
         // given
-        NoopIndexNameFormatter.Builder builder = NoopIndexNameFormatter.newBuilder();
+        final NoopIndexNameFormatter.Builder builder = NoopIndexNameFormatter.newBuilder();
         builder.withIndexName(TEST_INDEX_NAME);
-        NoopIndexNameFormatter formatter = builder.build();
+        final NoopIndexNameFormatter formatter = builder.build();
 
         // when
-        String formattedIndexName = formatter.format(Mockito.mock(LogEvent.class));
+        final String formattedIndexName = formatter.format(Mockito.mock(LogEvent.class));
+
+        // then
+        assertEquals(TEST_INDEX_NAME, formattedIndexName);
+    }
+
+    @Test
+    public void returnsIndexNameUnchangedOnMillis() {
+
+        // given
+        final NoopIndexNameFormatter.Builder builder = NoopIndexNameFormatter.newBuilder();
+        builder.withIndexName(TEST_INDEX_NAME);
+        final NoopIndexNameFormatter formatter = builder.build();
+
+        final LogEvent logEvent = Mockito.mock(LogEvent.class);
+        when(logEvent.getTimeMillis()).thenReturn(System.currentTimeMillis());
+
+        // when
+        final String formattedIndexName = formatter.format(logEvent.getTimeMillis());
 
         // then
         assertEquals(TEST_INDEX_NAME, formattedIndexName);
@@ -54,7 +73,7 @@ public class NoopIndexNameFormatterTest {
     public void builderThrowsWhenNameIsNull() {
 
         // given
-        NoopIndexNameFormatter.Builder builder = NoopIndexNameFormatter.newBuilder();
+        final NoopIndexNameFormatter.Builder builder = NoopIndexNameFormatter.newBuilder();
 
         // when
         final ConfigurationException exception = assertThrows(ConfigurationException.class, builder::build);
@@ -62,6 +81,5 @@ public class NoopIndexNameFormatterTest {
         // then
         assertThat(exception.getMessage(), containsString("indexName"));
     }
-
 
 }

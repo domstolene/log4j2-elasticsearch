@@ -20,7 +20,6 @@ package org.appenders.log4j2.elasticsearch;
  * #L%
  */
 
-import org.apache.logging.log4j.core.config.ConfigurationException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -44,24 +43,25 @@ public class UnlimitedResizePolicyTest {
     public void builderBuildsSuccessfully() {
 
         // given
-        UnlimitedResizePolicy.Builder builder = UnlimitedResizePolicy.newBuilder();
+        final UnlimitedResizePolicy.Builder builder = new UnlimitedResizePolicy.Builder();
 
         // when
-        ResizePolicy policy = builder.build();
+        final ResizePolicy policy = builder.build();
 
         // then
         assertNotNull(policy);
+
     }
 
     @Test
     public void builderThrowsWhenResizeFactorIsZero() {
 
         // given
-        UnlimitedResizePolicy.Builder builder = UnlimitedResizePolicy.newBuilder();
-        builder.withResizeFactor(0);
+        final UnlimitedResizePolicy.Builder builder = new UnlimitedResizePolicy.Builder()
+                .withResizeFactor(0);
 
         // when
-        final ConfigurationException exception = assertThrows(ConfigurationException.class, builder::build);
+        final IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
 
         // then
         assertThat(exception.getMessage(), containsString("resizeFactor must be higher than 0"));
@@ -72,11 +72,11 @@ public class UnlimitedResizePolicyTest {
     public void builderThrowsWhenResizeFactorIsLowerThanZero() {
 
         // given
-        UnlimitedResizePolicy.Builder builder = UnlimitedResizePolicy.newBuilder();
-        builder.withResizeFactor(-0.1);
+        final UnlimitedResizePolicy.Builder builder = new UnlimitedResizePolicy.Builder()
+                .withResizeFactor(-0.1);
 
         // when
-        final ConfigurationException exception = assertThrows(ConfigurationException.class, builder::build);
+        final IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
 
         // then
         assertThat(exception.getMessage(), containsString("resizeFactor must be higher than 0"));
@@ -87,11 +87,11 @@ public class UnlimitedResizePolicyTest {
     public void builderThrowsWhenResizeFactorIsHigherThanOne() {
 
         // given
-        UnlimitedResizePolicy.Builder builder = UnlimitedResizePolicy.newBuilder();
-        builder.withResizeFactor(1.01);
+        final UnlimitedResizePolicy.Builder builder = new UnlimitedResizePolicy.Builder()
+                .withResizeFactor(1.01);
 
         // when
-        final ConfigurationException exception = assertThrows(ConfigurationException.class, builder::build);
+        final IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
 
         // then
         assertThat(exception.getMessage(), containsString("resizeFactor must be lower or equal 1"));
@@ -102,7 +102,7 @@ public class UnlimitedResizePolicyTest {
     public void canResizeByDefault() {
 
         // given
-        final UnlimitedResizePolicy policy = UnlimitedResizePolicy.newBuilder().build();
+        final UnlimitedResizePolicy policy = new UnlimitedResizePolicy.Builder().build();
 
         // when
         final boolean result = policy.canResize(null);
@@ -116,14 +116,16 @@ public class UnlimitedResizePolicyTest {
     public void increaseThrowsWhenResizeWouldNotTakeAnyEffect() {
 
         // given
-        ResizePolicy policy = UnlimitedResizePolicy.newBuilder().withResizeFactor(0.1).build();
+        final ResizePolicy policy = new UnlimitedResizePolicy.Builder()
+                .withResizeFactor(0.1)
+                .build();
 
-        ItemSourcePool pool = mock(ItemSourcePool.class);
-        Integer initialPoolSize = 5;
+        final ItemSourcePool pool = mock(ItemSourcePool.class);
+        final Integer initialPoolSize = 5;
         when(pool.getInitialSize()).thenReturn(initialPoolSize);
 
         // when
-        final ConfigurationException exception = assertThrows(ConfigurationException.class, () -> policy.increase(pool));
+        final IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> policy.increase(pool));
 
         // then
         assertThat(exception.getMessage(), containsString("will not resize given pool"));
@@ -134,20 +136,22 @@ public class UnlimitedResizePolicyTest {
     public void increaseIncrementsPoolSizeByResizeFactorMultipliedByInitialPoolSize() {
 
         // given
-        double resizeFactor = 0.2;
-        ResizePolicy policy = UnlimitedResizePolicy.newBuilder().withResizeFactor(resizeFactor).build();
+        final double resizeFactor = 0.2;
+        final ResizePolicy policy = new UnlimitedResizePolicy.Builder()
+                .withResizeFactor(resizeFactor)
+                .build();
 
-        int initialPoolSize = 10;
-        ItemSourcePool pool = mock(ItemSourcePool.class);
+        final int initialPoolSize = 10;
+        final ItemSourcePool pool = mock(ItemSourcePool.class);
         when(pool.getInitialSize()).thenReturn(initialPoolSize);
 
         // when
-        boolean resized = policy.increase(pool);
+        final boolean resized = policy.increase(pool);
 
         // then
         assertTrue(resized);
 
-        ArgumentCaptor<Integer> captor = ArgumentCaptor.forClass(Integer.class);
+        final ArgumentCaptor<Integer> captor = ArgumentCaptor.forClass(Integer.class);
         verify(pool).incrementPoolSize(captor.capture());
         assertEquals((Object)(int)(initialPoolSize * resizeFactor), captor.getValue());
 
@@ -157,42 +161,46 @@ public class UnlimitedResizePolicyTest {
     public void decreaseShrinksPoolByTotalSizeMultipliedByResizeFactor() {
 
         // given
-        int initialSize = 50;
-        int additionalSize = 50;
+        final int initialSize = 50;
+        final int additionalSize = 50;
 
-        int expectedResizedTotalSize = 80;
-        double resizeFactor = 0.2;
+        final int expectedResizedTotalSize = 80;
+        final double resizeFactor = 0.2;
 
-        ResizePolicy resizePolicy = UnlimitedResizePolicy.newBuilder().withResizeFactor(resizeFactor).build();
+        final ResizePolicy resizePolicy = new UnlimitedResizePolicy.Builder()
+                .withResizeFactor(resizeFactor)
+                .build();
 
-        ItemSourcePool pool = spy(GenericItemSourcePoolTest.createDefaultTestGenericItemSourcePool(initialSize, true));
+        final ItemSourcePool pool = spy(GenericItemSourcePoolTest.createDefaultTestGenericItemSourcePool(initialSize, true));
         pool.start();
         pool.incrementPoolSize(additionalSize);
 
         // when
-        boolean resized = resizePolicy.decrease(pool);
+        final boolean resized = resizePolicy.decrease(pool);
 
         // then
         assertTrue(resized);
-
         assertEquals(expectedResizedTotalSize, pool.getTotalSize());
+
     }
 
     @Test
     public void decreaseNeverShrinksBelowInitialSize() throws PoolResourceException {
 
         // given
-        int initialSize = 40;
-        int additionalSize = 60;
-        double resizeFactor = 0.75;
-        int expectedResizedTotalSize = initialSize + 5; // 5 will be in use
+        final int initialSize = 40;
+        final int additionalSize = 60;
+        final double resizeFactor = 0.75;
+        final int expectedResizedTotalSize = initialSize + 5; // 5 will be in use
 
-        ResizePolicy resizePolicy = UnlimitedResizePolicy.newBuilder().withResizeFactor(resizeFactor).build();
+        final ResizePolicy resizePolicy = new UnlimitedResizePolicy.Builder()
+                .withResizeFactor(resizeFactor)
+                .build();
 
-        PooledObjectOps pooledObjectOps = mock(PooledObjectOps.class);
+        final PooledObjectOps pooledObjectOps = mock(PooledObjectOps.class);
         when(pooledObjectOps.createItemSource(any())).thenReturn(mock(ItemSource.class));
 
-        ItemSourcePool pool = spy(GenericItemSourcePoolTest.createDefaultTestGenericItemSourcePool(initialSize, true, pooledObjectOps));
+        final ItemSourcePool pool = spy(GenericItemSourcePoolTest.createDefaultTestGenericItemSourcePool(initialSize, true, pooledObjectOps));
         pool.start();
         pool.incrementPoolSize(additionalSize);
 
@@ -219,17 +227,19 @@ public class UnlimitedResizePolicyTest {
     public void decreaseNeverShrinksWhenResizeWouldBeHigherThanAvailableSize() throws PoolResourceException {
 
         // given
-        int initialSize = 40;
-        int additionalSize = 60;
-        double resizeFactor = 0.55;
-        int expectedResizedTotalSize = initialSize + additionalSize;
+        final int initialSize = 40;
+        final int additionalSize = 60;
+        final double resizeFactor = 0.55;
+        final int expectedResizedTotalSize = initialSize + additionalSize;
 
-        ResizePolicy resizePolicy = UnlimitedResizePolicy.newBuilder().withResizeFactor(resizeFactor).build();
+        final ResizePolicy resizePolicy = new UnlimitedResizePolicy.Builder()
+                .withResizeFactor(resizeFactor)
+                .build();
 
-        PooledObjectOps pooledObjectOps = mock(PooledObjectOps.class);
+        final PooledObjectOps pooledObjectOps = mock(PooledObjectOps.class);
         when(pooledObjectOps.createItemSource(any())).thenReturn(mock(ItemSource.class));
 
-        ItemSourcePool pool = spy(GenericItemSourcePoolTest.createDefaultTestGenericItemSourcePool(initialSize, true));
+        final ItemSourcePool pool = spy(GenericItemSourcePoolTest.createDefaultTestGenericItemSourcePool(initialSize, true));
         pool.start();
         pool.incrementPoolSize(additionalSize);
 
@@ -239,7 +249,7 @@ public class UnlimitedResizePolicyTest {
         }
 
         // when
-        boolean resized = resizePolicy.decrease(pool);
+        final boolean resized = resizePolicy.decrease(pool);
 
         // then
         assertFalse(resized);
@@ -250,4 +260,5 @@ public class UnlimitedResizePolicyTest {
         verify(pooledObjectOps, times(0)).purge(any()); // remove is final, so verifying via internal calls
 
     }
+
 }

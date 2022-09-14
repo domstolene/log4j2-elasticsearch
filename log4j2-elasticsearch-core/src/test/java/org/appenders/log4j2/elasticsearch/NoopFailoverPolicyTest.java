@@ -36,25 +36,26 @@ public class NoopFailoverPolicyTest {
     public void minimalBuilderTest() {
 
         // given
-        NoopFailoverPolicy.Builder builder = NoopFailoverPolicy.newBuilder();
+        final NoopFailoverPolicy.Builder builder = new NoopFailoverPolicy.Builder();
 
         // when
-        FailoverPolicy failoverPolicy = builder.build();
+        final FailoverPolicy failoverPolicy = builder.build();
 
         // then
         assertNotNull(failoverPolicy);
+
     }
 
     @Test
     public void deliverFailedItemSourceDelegatesToGenericAPI() {
 
         // given
-        NoopFailoverPolicy.Builder builder = NoopFailoverPolicy.newBuilder();
-        FailoverPolicy<Object> failoverPolicy = spy(builder.build());
+        final NoopFailoverPolicy.Builder builder = new NoopFailoverPolicy.Builder();
+        final FailoverPolicy<Object> failoverPolicy = spy(builder.build());
 
-        FailedItemSource<Object> failedItemSource = mock(FailedItemSource.class);
+        final FailedItemSource<Object> failedItemSource = mock(FailedItemSource.class);
 
-        ItemSource itemSource = mock(ItemSource.class);
+        final ItemSource itemSource = mock(ItemSource.class);
         when(failedItemSource.getSource()).thenReturn(itemSource);
 
         // when
@@ -64,4 +65,5 @@ public class NoopFailoverPolicyTest {
         verify(failoverPolicy).deliver(itemSource);
 
     }
+
 }

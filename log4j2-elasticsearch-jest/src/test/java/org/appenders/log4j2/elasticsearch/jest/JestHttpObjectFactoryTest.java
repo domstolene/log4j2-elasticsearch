@@ -22,6 +22,7 @@ package org.appenders.log4j2.elasticsearch.jest;
 
 
 import io.searchbox.action.AbstractAction;
+import io.searchbox.action.Action;
 import io.searchbox.client.JestClient;
 import io.searchbox.client.JestResult;
 import io.searchbox.client.JestResultHandler;
@@ -31,7 +32,6 @@ import io.searchbox.core.Index;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.ConfigurationException;
 import org.apache.logging.log4j.core.lookup.StrSubstitutor;
-import org.appenders.core.logging.InternalLogging;
 import org.appenders.log4j2.elasticsearch.Auth;
 import org.appenders.log4j2.elasticsearch.ClientObjectFactory;
 import org.appenders.log4j2.elasticsearch.ClientProvider;
@@ -54,10 +54,12 @@ import org.powermock.api.mockito.PowerMockito;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
+import static org.appenders.core.logging.InternalLogging.setLogger;
 import static org.appenders.log4j2.elasticsearch.IndexTemplateTest.createTestIndexTemplateBuilder;
 import static org.appenders.log4j2.elasticsearch.mock.LifecycleTestHelper.falseOnlyOnce;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -98,7 +100,7 @@ public class JestHttpObjectFactoryTest {
 
     @AfterEach
     public void tearDown() {
-        InternalLogging.setLogger(null);
+        setLogger(null);
     }
 
     @Test
@@ -528,14 +530,44 @@ public class JestHttpObjectFactoryTest {
 
         Builder builder = createTestObjectFactoryBuilder();
         builder.withBackoffPolicy(backoffPolicy);
+        final JestHttpObjectFactory factory = new JestHttpObjectFactory(builder) {
+            @Override
+            public JestClient createClient() {
+                return new JestClient() {
 
-        JestHttpObjectFactory config = spy(builder.build());
+                    @Override
+                    public void close() throws IOException {
+
+                    }
+
+                    @Override
+                    public <T extends JestResult> T execute(Action<T> clientRequest) throws IOException {
+                        return null;
+                    }
+
+                    @Override
+                    public <T extends JestResult> void executeAsync(Action<T> clientRequest, JestResultHandler<? super T> jestResultHandler) {
+
+                    }
+
+                    @Override
+                    public void shutdownClient() {
+
+                    }
+
+                    @Override
+                    public void setServers(Set<String> servers) {
+
+                    }
+                };
+            }
+        };
 
         String payload1 = "test1";
         Bulk bulk = createTestBatch(payload1);
 
         FailoverPolicy failoverPolicy = mock(FailoverPolicy.class);
-        Function<Bulk, Boolean> listener = config.createBatchListener(failoverPolicy);
+        Function<Bulk, Boolean> listener = factory.createBatchListener(failoverPolicy);
 
         // when
         listener.apply(bulk);

@@ -1,5 +1,25 @@
 package org.appenders.log4j2.elasticsearch.hc.jmh;
 
+/*-
+ * #%L
+ * log4j2-elasticsearch
+ * %%
+ * Copyright (C) 2021 Rafal Foltynski
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.netty.buffer.ByteBuf;
@@ -67,7 +87,7 @@ public class AsyncBatchEmitterWithBatchOperationsTest {
 
     private final ByteBufAllocator byteBufAllocator = UnpooledByteBufAllocator.DEFAULT;
 
-    @Param(value = {
+    @Param({
             "1",
             "10",
             "1000",
@@ -76,7 +96,7 @@ public class AsyncBatchEmitterWithBatchOperationsTest {
     })
     public int itemPoolSize;
 
-    @Param(value = {
+    @Param({
             "512",
             "2048",
             "4096",
@@ -135,7 +155,7 @@ public class AsyncBatchEmitterWithBatchOperationsTest {
                 .withMonitored(false)
                 .withMonitorTaskInterval(1000)
                 .withPoolName("batchPool")
-                .withResizePolicy(UnlimitedResizePolicy.newBuilder().withResizeFactor(0.5).build())
+                .withResizePolicy(new UnlimitedResizePolicy.Builder().withResizeFactor(0.5).build())
                 .withResizeTimeout(100)
                 .build();
 

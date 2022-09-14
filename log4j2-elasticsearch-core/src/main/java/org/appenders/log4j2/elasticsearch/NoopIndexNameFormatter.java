@@ -23,15 +23,14 @@ package org.appenders.log4j2.elasticsearch;
 
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.config.ConfigurationException;
-import org.apache.logging.log4j.core.config.Node;
-import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
 import org.apache.logging.log4j.core.config.plugins.validation.constraints.Required;
 
-import static org.appenders.log4j2.elasticsearch.NoopIndexNameFormatter.PLUGIN_NAME;
-
-@Plugin(name = PLUGIN_NAME, category = Node.CATEGORY, elementType = IndexNameFormatter.ELEMENT_TYPE, printObject = true)
+/**
+ * @deprecated As of 2.0, this class will be removed. Use {@link IndexNamePlugin} instead.
+ */
+@Deprecated
 public class NoopIndexNameFormatter implements IndexNameFormatter<LogEvent> {
 
     static final String PLUGIN_NAME = "IndexName";
@@ -44,6 +43,11 @@ public class NoopIndexNameFormatter implements IndexNameFormatter<LogEvent> {
 
     @Override
     public String format(LogEvent logEvent) {
+        return this.indexName;
+    }
+
+    @Override
+    public String format(long millis) {
         return this.indexName;
     }
 

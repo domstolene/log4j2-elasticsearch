@@ -34,9 +34,10 @@ import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.validation.constraints.Required;
-import org.appenders.core.logging.InternalLogging;
 
 import java.util.concurrent.TimeUnit;
+
+import static org.appenders.core.logging.InternalLogging.setLogger;
 
 
 /**
@@ -83,9 +84,9 @@ public class ElasticsearchAppender extends AbstractAppender {
     public static class Builder implements org.apache.logging.log4j.core.util.Builder<ElasticsearchAppender>  {
 
         /**
-         * Default: {@link NoopIndexNameFormatter}
+         * Default: {@link IndexNamePlugin}
          */
-        public static final IndexNameFormatter DEFAULT_INDEX_NAME_FORMATTER = NoopIndexNameFormatter.newBuilder().withIndexName("log4j2").build();
+        public static final IndexNameFormatter DEFAULT_INDEX_NAME_FORMATTER = IndexNamePlugin.newBuilder().withIndexName("log4j2").build();
 
         @PluginBuilderAttribute
         @Required(message = "No name provided for Elasticsearch appender")
@@ -242,7 +243,7 @@ public class ElasticsearchAppender extends AbstractAppender {
             ((LifeCycle)getLayout()).stop();
         }
 
-        InternalLogging.setLogger(null);
+        setLogger(null);
 
     }
 

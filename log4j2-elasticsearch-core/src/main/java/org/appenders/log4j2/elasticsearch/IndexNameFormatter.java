@@ -20,11 +20,12 @@ package org.appenders.log4j2.elasticsearch;
  * #L%
  */
 
-
-public interface IndexNameFormatter<T> {
+/**
+ *
+ * @param <T> type to use to derive or extend index name
+ */
+public interface IndexNameFormatter<T> extends ObjectFormatter<T>, MillisFormatter  {
 
     String ELEMENT_TYPE = "indexNameFormatter";
-
-    String format(T logEvent);
 
 }
